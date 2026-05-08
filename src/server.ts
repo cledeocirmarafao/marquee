@@ -27,7 +27,17 @@ app.get("/movies", async (_req, res) => {
 app.post("/movies", async (req, res) => {
   const { title, genre_id, language_id, oscar_count, release_date } = req.body;
 
-  try {
+  try { 
+    const existingMovie = await prisma.movies.findFirst({
+      where: { title: { equals: title, mode: "insensitive" } },
+    });
+
+    if (existingMovie) {
+      return res
+        .status(409)
+        .json({ message: "Esse título já está cadastrado" });
+    }
+
     await prisma.movies.create({
       data: {
         title,
@@ -38,7 +48,9 @@ app.post("/movies", async (req, res) => {
       },
     });
   } catch (err) {
-    res.status(500).json({ error: "Ocorreu um erro ao tentar criar um filme." });
+    res
+      .status(500)
+      .json({ error: "Ocorreu um erro ao tentar criar um filme." });
   }
 
   res.status(201).send();
