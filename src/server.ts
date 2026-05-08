@@ -27,7 +27,7 @@ app.get("/movies", async (_req, res) => {
 app.post("/movies", async (req, res) => {
   const { title, genre_id, language_id, oscar_count, release_date } = req.body;
 
-  try { 
+  try {
     const existingMovie = await prisma.movies.findFirst({
       where: { title: { equals: title, mode: "insensitive" } },
     });
@@ -54,6 +54,38 @@ app.post("/movies", async (req, res) => {
   }
 
   res.status(201).send();
+});
+
+app.put("/movies/:id", async (req, res) => {
+  const id = Number(req.params.id);
+
+  try {
+    const movie = await prisma.movies.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!movie) {
+      return res.status(404).json("Filme não localizado no Banco de Dados");
+    }
+
+    const data = { ...req.body };
+    data.release_date = data.release_date
+      ? new Date(data.release_date)
+      : undefined;
+
+    await prisma.movies.update({
+      where: {
+        id,
+      },
+      data: data,
+    });
+  } catch (err) {
+    return res.status(500).json("Falha ao atualizar o registro do filme");
+  }
+
+  res.status(200).send();
 });
 
 app.listen(port, () => {
