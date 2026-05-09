@@ -2,6 +2,8 @@ import express from "express";
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../generated/prisma/client";
+import swaggerUi from "swagger-ui-express";
+import swaggerDoc from "../swagger.json";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
@@ -10,6 +12,7 @@ const port = 3000;
 const app = express();
 
 app.use(express.json());
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDoc));
 
 app.get("/movies", async (_req, res) => {
   const movies = await prisma.movies.findMany({
@@ -106,7 +109,7 @@ app.delete("/movies/:id", async (req, res) => {
   res.status(200).send();
 });
 
-app.get('/movies/:genreName', async (req, res) => {
+app.get("/movies/:genreName", async (req, res) => {
   try {
     const filteredMovies = await prisma.movies.findMany({
       include: {
@@ -118,7 +121,7 @@ app.get('/movies/:genreName', async (req, res) => {
           is: {
             name: {
               equals: req.params.genreName,
-              mode: 'insensitive',
+              mode: "insensitive",
             },
           },
         },
@@ -127,7 +130,7 @@ app.get('/movies/:genreName', async (req, res) => {
 
     return res.status(200).send(filteredMovies);
   } catch (err) {
-    return res.status(500).json('Ocorreu um erro ao filtrar filme');
+    return res.status(500).json("Ocorreu um erro ao filtrar filme");
   }
 });
 
